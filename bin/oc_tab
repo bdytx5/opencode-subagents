@@ -1,0 +1,53 @@
+#!/bin/zsh
+# usage: oc_tab <script that starts an OpenCode screen>
+# Puts that script in a NEW TAB of the one Terminal window that holds the OpenCode screens (one window, many
+# tabs). If no window holds an OpenCode screen, opens one fresh window instead. Terminal gives every tab its own window number.
+RUN="${1:?script}"
+OCTTYS=$(ps -axo tty=,command= | awk -v p="opencode $HOME/.opencode_work" 'index($0, p) && !/awk/ {print "/dev/" $1}' | sort -u | tr '\n' ' ')
+osascript - "$RUN" "$OCTTYS" <<'OSA'
+on run argv
+  set runPath to item 1 of argv
+  set ocTtys to item 2 of argv
+  tell application "Terminal"
+    set targetID to 0
+    repeat with w in windows
+      repeat with t in tabs of w
+        if ocTtys contains (tty of t) then
+          set targetID to id of w
+          exit repeat
+        end if
+      end repeat
+      if targetID is not 0 then exit repeat
+    end repeat
+    if targetID is 0 then
+      do script ""
+      set newWin to front window
+      set bounds of newWin to {0, 25, 980, 800}
+      set newID to id of newWin
+      delay 1
+      do script runPath in selected tab of newWin
+      return "new window " & newID
+    end if
+    set idsBefore to id of every window
+    tell application "System Events"
+      set prevApp to name of first application process whose frontmost is true
+    end tell
+    activate
+    set frontmost of window id targetID to true
+    delay 0.5
+    tell application "System Events" to tell process "Terminal" to click menu item "Basic" of menu 1 of menu item "New Tab" of menu 1 of menu bar item "Shell" of menu bar 1
+    delay 1.5
+    set newTabID to 0
+    repeat with w in windows
+      if idsBefore does not contain (id of w) then set newTabID to id of w
+    end repeat
+    if newTabID is 0 then
+      tell application "System Events" to set frontmost of process prevApp to true
+      return "FAILED: could not open a new tab next to window " & targetID
+    end if
+    do script runPath in selected tab of window id newTabID
+    tell application "System Events" to set frontmost of process prevApp to true
+    return "new tab (window number " & newTabID & ") next to window " & targetID
+  end tell
+end run
+OSA

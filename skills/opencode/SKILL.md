@@ -67,15 +67,19 @@ To continue a worker's session: `opencode run -s <session id> "<follow-up>"`. `-
 
 That is a delegation (or a test) of the task itself. Pass the user's request in their own words and let the model work out every step. Do not investigate first, do not add hints or a plan to its prompt, and do not quietly finish the job for it if it fails. Only add obvious safety limits (for example "read-only, change nothing"). Report what the model did and answered, quoting its real output, including where it failed.
 
-## Visible mode (macOS only)
+## Visible mode (macOS; the default when the user says to use GLM or DeepSeek with OpenCode, including several subagents at once)
 
-To watch a run live in a Terminal window:
+Launch every worker with the interactive-screen launcher, one call per worker:
 
 ```
-~/bin/oc_watch opencode/glm-5.3-flash-free "<the user's request in their own words>"
+~/bin/oc_tui opencode/glm-5.3-flash-free "<the full prompt for this worker>"
 ```
 
-It runs the task in one reusable Terminal window at the top-left of the screen without stealing focus. The window ends with "[finished]". To read the result, read that window's history with osascript by its window id (find it by the text "OpenCode live run" and "[finished]"; never match on text that also appears in the Claude window). It runs one task at a time; use background subagents for parallel work.
+It opens the FULL interactive OpenCode screen (its thinking, replies, tool calls, and a box at the bottom where the user can type to it) and starts the task by itself, all permissions on. The first one opens a fresh Terminal window; every later one opens as a NEW TAB in that same window (via ~/bin/oc_tab), so six subagents = one window with six tabs, never six windows. Launch them one after another with a few seconds between calls (the tab is opened through the Terminal menu). Prefer this over hidden background `opencode run` jobs whenever the user wants to watch the subagents.
+
+Each worker writes its answer to its own result file (give it an absolute path in its own folder under ~/.opencode_work/<job>_<n>/). The screens stay open after the task, so do not wait for the process to end: watch for the result files (a background shell: `until [ all result files exist ]; do sleep 60; done`), and if a worker stalls, read its screen with osascript by its tty (`ps -axo pid=,tty=,command= | grep "opencode $HOME/.opencode_work"`).
+
+`~/bin/oc_watch <model> "<prompt>"` is the older launcher: plain `opencode run` output in one reusable window, one task at a time. Use it only for a single quick run.
 
 ## Hard rules learned the hard way
 

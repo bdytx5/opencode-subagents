@@ -1,0 +1,16 @@
+#!/bin/zsh
+# usage: oc_tui <model> "<prompt>"   e.g. oc_tui opencode/glm-5.3-flash-free "do X"
+# Opens the FULL interactive OpenCode screen (its thinking, replies, tool calls, and a box at the bottom where you can type
+# messages to it) and starts the task by itself. All permissions on. If an OpenCode screen is already running in some Terminal
+# window, the new one opens as a NEW TAB in that same window (fewer windows); otherwise a fresh window.
+# Runs from ~/.opencode_work (never the home folder: OpenCode hangs on the giant git scan there).
+# Output is sent straight to the screen (the shell setup pipes it through a logger, which made OpenCode think the screen was 80x24).
+MODEL="${1:?model}"; PROMPT="${2:?prompt}"
+RUN=$(mktemp ~/.opencode_work/tui.XXXXXX); mv "$RUN" "$RUN.sh"; RUN="$RUN.sh"
+printf '%s' "$PROMPT" > "$RUN.prompt"
+printf '%s\n' '#!/bin/zsh' 'export PATH=$HOME/.opencode/bin:$PATH' 'cd ~/.opencode_work' \
+  "sleep 1" \
+  "opencode ~/.opencode_work -m '$MODEL' --auto --prompt \"\$(cat '$RUN.prompt')\" >\"\$(tty)\" 2>&1" > "$RUN"
+chmod +x "$RUN"
+RESULT=$(~/bin/oc_tab "$RUN")
+echo "opened OpenCode interactive screen: $RESULT, model $MODEL"

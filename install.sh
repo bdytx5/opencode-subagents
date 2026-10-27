@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Installs the OpenCode subagents skill for Claude Code.
 #   - installs OpenCode if it is missing
-#   - copies the skill to ~/.claude/skills/opencode and the launcher to ~/bin/oc_watch
+#   - copies the skill to ~/.claude/skills/opencode and the launchers to ~/bin
 #   - optionally lets OpenCode run without permission prompts (needed for background workers)
 #   - optionally installs Handy (free offline speech-to-text) for voice mode
 set -e
@@ -16,9 +16,9 @@ echo "[2/5] Skill -> ~/.claude/skills/opencode"
 mkdir -p "$HOME/.claude/skills/opencode"
 cp "$HERE/skills/opencode/SKILL.md" "$HOME/.claude/skills/opencode/SKILL.md"
 
-echo "[3/5] Launcher -> ~/bin/oc_watch (visible mode, macOS only)"
+echo "[3/5] Launchers -> ~/bin/oc_tui, oc_tab, oc_watch (visible mode, macOS only)"
 mkdir -p "$HOME/bin" "$HOME/.opencode_work"
-cp "$HERE/bin/oc_watch" "$HOME/bin/oc_watch"; chmod +x "$HOME/bin/oc_watch"
+for f in oc_watch oc_tui oc_tab; do cp "$HERE/bin/$f" "$HOME/bin/$f"; chmod +x "$HOME/bin/$f"; done
 
 echo "[4/5] OpenCode permissions"
 CFG="$HOME/.config/opencode/opencode.json"
