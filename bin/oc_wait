@@ -1,0 +1,14 @@
+#!/bin/zsh
+# usage: oc_wait <worker folder> [<worker folder> ...]
+# Returns as soon as ANY of the folders has a DONE file, a QUESTION.md or a BLOCKED.md, and prints which one and what it says.
+# Run it with run_in_background so Claude is notified the moment a subagent finishes, asks a question or gets stuck.
+# Run it again (without the folders already handled) to wait for the next event.
+[ $# -gt 0 ] || { echo "usage: oc_wait <folder> ..."; exit 1; }
+while true; do
+  for d in "$@"; do
+    if [ -f "$d/QUESTION.md" ]; then echo "QUESTION from $d:"; cat "$d/QUESTION.md"; exit 0; fi
+    if [ -f "$d/BLOCKED.md" ]; then echo "BLOCKED $d:"; cat "$d/BLOCKED.md"; exit 0; fi
+    if [ -f "$d/DONE" ]; then echo "DONE $d (result: $d/result.md)"; exit 0; fi
+  done
+  sleep 10
+done

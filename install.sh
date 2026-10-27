@@ -16,9 +16,9 @@ echo "[2/5] Skill -> ~/.claude/skills/opencode"
 mkdir -p "$HOME/.claude/skills/opencode"
 cp "$HERE/skills/opencode/SKILL.md" "$HOME/.claude/skills/opencode/SKILL.md"
 
-echo "[3/5] Launchers -> ~/bin/oc_tui, oc_tab, oc_watch (visible mode, macOS only)"
+echo "[3/5] Launchers and helpers -> ~/bin/oc_tui, oc_tab, oc_watch, oc_wait, oc_say (visible mode, macOS only)"
 mkdir -p "$HOME/bin" "$HOME/.opencode_work"
-for f in oc_watch oc_tui oc_tab; do cp "$HERE/bin/$f" "$HOME/bin/$f"; chmod +x "$HOME/bin/$f"; done
+for f in oc_watch oc_tui oc_tab oc_wait oc_say; do cp "$HERE/bin/$f" "$HOME/bin/$f"; chmod +x "$HOME/bin/$f"; done
 
 echo "[4/5] OpenCode permissions"
 CFG="$HOME/.config/opencode/opencode.json"

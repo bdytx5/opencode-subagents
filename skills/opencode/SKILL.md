@@ -67,6 +67,29 @@ To continue a worker's session: `opencode run -s <session id> "<follow-up>"`. `-
 
 That is a delegation (or a test) of the task itself. Pass the user's request in their own words and let the model work out every step. Do not investigate first, do not add hints or a plan to its prompt, and do not quietly finish the job for it if it fails. Only add obvious safety limits (for example "read-only, change nothing"). Report what the model did and answered, quoting its real output, including where it failed.
 
+## How a subagent tells Claude it finished, has a question, or is stuck
+
+An OpenCode worker cannot call Claude directly, so the two sides use plain files in the worker's own folder (`~/.opencode_work/<job>_<n>/`) and two small tools. Claude is woken by a background command ending, so nothing is polled and no tokens are spent waiting.
+
+**Put these rules in EVERY worker prompt** (copy the block word for word, with the worker's folder filled in):
+
+```
+HOW TO REPORT BACK TO CLAUDE. Your folder is <FOLDER>. Use only these files in it:
+- When your task is completely finished: write your answer to result.md first, then create an empty file named DONE.
+- If you need a decision or information only the user or Claude can give: write your question (what you need, what you already tried, the options you see) to QUESTION.md, then stop and wait. Claude will type the answer into this screen.
+- If you cannot continue (a tool or source is broken, a limit you cannot get around): write exactly what failed and what you tried to BLOCKED.md, then stop.
+Do not wait silently: a finished task without DONE, or a question not written to QUESTION.md, is never noticed.
+```
+
+**Claude's side:**
+
+1. After launching the workers, start one background watcher over all their folders: `oc_wait <folder1> <folder2> ...` (with `run_in_background: true`). It ends the moment any folder gets a `DONE`, `QUESTION.md` or `BLOCKED.md`, and prints which one and what it says. Claude is notified when it ends.
+2. When it ends: for `DONE`, read `result.md` and check the claims; for a question, answer it with `oc_say <Terminal window id of that worker's tab> <folder> "<answer>"` (it types the answer into the worker's screen and archives the question); for `BLOCKED`, decide whether to fix the cause, rewrite the task, or tell the user.
+3. Start the watcher again, leaving out the folders already finished, until every worker has reported.
+4. The window id of each worker's tab is printed by `oc_tui` ("new tab (window number N)"); write it down next to the worker's folder.
+
+The user can also type into any worker's screen directly at any time.
+
 ## Visible mode (macOS; the default when the user says to use GLM or DeepSeek with OpenCode, including several subagents at once)
 
 Launch every worker with the interactive-screen launcher, one call per worker:

@@ -1,0 +1,10 @@
+#!/bin/zsh
+# usage: oc_say <Terminal window id of the worker's tab> <worker folder> "<answer or instruction>"
+# Types the text into the worker's OpenCode screen (as if the user typed it) and archives its QUESTION.md / BLOCKED.md so oc_wait does not report it again.
+WIN="${1:?window id}"; DIR="${2:?worker folder}"; TEXT="${3:?text}"
+for f in QUESTION BLOCKED; do [ -f "$DIR/$f.md" ] && mv "$DIR/$f.md" "$DIR/$f.answered.md"; done
+osascript - "$WIN" "$TEXT" <<'OSA'
+on run argv
+  tell application "Terminal" to do script (item 2 of argv) in selected tab of window id (item 1 of argv as integer)
+end run
+OSA
