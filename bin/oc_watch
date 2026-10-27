@@ -1,0 +1,36 @@
+#!/bin/zsh
+# usage: oc_watch <model> "<prompt>"   (model e.g. opencode/glm-5.3-flash-free or opencode/deepseek-v4.1-flash-free)
+# Opens a Terminal window at the top-left of the screen where OpenCode runs the task live, all permissions on.
+# Runs from ~/.opencode_work (a small folder): starting OpenCode inside the home folder hangs on a giant git scan.
+MODEL="${1:?model}"; PROMPT="${2:?prompt}"
+RUN=$(mktemp ~/.opencode_work/run.XXXXXX); mv "$RUN" "$RUN.sh"; RUN="$RUN.sh"
+printf '%s\n' '#!/bin/zsh' 'export PATH=$HOME/.opencode/bin:$PATH' 'cd ~/.opencode_work' \
+  "echo 'OpenCode live run: $MODEL (all permissions on)'" "echo '----------------------------------------'" \
+  "opencode run --thinking -m '$MODEL' --dir ~/.opencode_work --auto \"\$(cat '$RUN.prompt')\"" \
+  "echo '----------------------------------------'" "echo '[finished] you can close this window'" > "$RUN"
+printf '%s' "$PROMPT" > "$RUN.prompt"; chmod +x "$RUN"
+# One reusable window (id kept in ~/.opencode_work/window_id): a NEW Terminal window always grabs focus, running inside an existing one does not.
+WIDFILE=~/.opencode_work/window_id
+WID=$(cat "$WIDFILE" 2>/dev/null || echo 0)
+NEWID=$(osascript <<OSA
+tell application "Terminal"
+  set wid to $WID
+  if wid is not 0 and (exists window id wid) then
+    do script "clear; $RUN" in selected tab of window id wid
+    return wid
+  end if
+  set prevID to 0
+  try
+    set prevID to id of front window
+  end try
+  do script "$RUN"
+  set newWin to front window
+  set bounds of newWin to {0, 25, 820, 760}
+  set newID to id of newWin
+  if prevID is not 0 then set index of window id prevID to 1
+  return newID
+end tell
+OSA
+)
+echo "$NEWID" > "$WIDFILE"
+echo "opened window running $MODEL"
