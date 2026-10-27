@@ -5,6 +5,7 @@ A Claude Code skill that lets Claude hand work to [OpenCode](https://opencode.ai
 - **Ideas and second opinions:** "ask opencode for ideas on X", or ask both models and compare.
 - **Parallel subagents:** "spawn a few GLM and DeepSeek subagents to do X". Claude splits the job, runs each piece as a background OpenCode worker in its own folder, waits, then checks and reports what each model found.
 - **Visible mode (macOS):** every subagent opens as its own tab in one Terminal window, showing the full OpenCode screen (its thinking, tool calls, and a box where you can type to it).
+- **Subagents report back:** each worker writes a file when it is done, has a question, or is stuck; `oc_wait` wakes Claude on it and `oc_say` types Claude's answer into that worker's tab.
 - **Voice mode (optional):** installs [Handy](https://handy.computer), a free, offline speech-to-text app, so you can talk instead of type.
 
 ## Install
@@ -18,7 +19,7 @@ cd opencode-subagents
 The installer:
 1. Installs OpenCode if you don't have it.
 2. Copies the skill to `~/.claude/skills/opencode/`.
-3. Copies the launchers (`oc_tui`, `oc_tab`, `oc_watch`) to `~/bin/`.
+3. Copies the launchers and helpers (`oc_tui`, `oc_tab`, `oc_watch`, `oc_wait`, `oc_say`) to `~/bin/`.
 4. Offers to let OpenCode run without permission prompts.
 5. Asks whether you want voice mode (Handy).
 
